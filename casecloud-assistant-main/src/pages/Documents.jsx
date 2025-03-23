@@ -13,21 +13,34 @@ const Documents = () => {
   const [view, setView] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const [documentsPerPage] = useState(12);
+  const [selectedType, setSelectedType] = useState('All Types');
+  const [selectedCategory, setSelectedCategory] = useState('All Categories');
+  const [selectedDate, setSelectedDate] = useState('All Time');
 
   useEffect(() => {
+   // Fetch all documents on initial render
+   fetchDocuments({ });
+   }, []);
     const fetchDocuments = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/documents'); // Replace with your API endpoint
+        const response = await axios.get('http://localhost:5000/api/documents',{
+          params: {
+            type: selectedType,
+            category: selectedCategory,
+            date: selectedDate,
+            page: currentPage,
+            limit: documentsPerPage,
+          },
+        }); // Replace with your API endpoint
         setDocuments(response.data);
-        console.log("Documents State:", documents); // Add this line
+        // Add this line
         setLoading(false);
       } catch (error) {
         console.error('Error fetching documents:', error);
         setLoading(false); // Ensure loading is false even on error
       }
     };
-    fetchDocuments();
-  }, []);
+ 
   // Get current documents
   const indexOfLastDocument = currentPage * documentsPerPage;
   const indexOfFirstDocument = indexOfLastDocument - documentsPerPage;
@@ -200,7 +213,10 @@ const Documents = () => {
             <div className="p-4 border-b border-gray-100 grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Document Type</label>
-                <select className="w-full border border-gray-200 rounded-lg p-2 text-sm">
+                <select className="w-full border border-gray-200 rounded-lg p-2 text-sm"
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                >
                   <option>All Types</option>
                   <option>PDF</option>
                   <option>DOCX</option>
@@ -210,7 +226,11 @@ const Documents = () => {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                <select className="w-full border border-gray-200 rounded-lg p-2 text-sm">
+                <select 
+                className="w-full border border-gray-200 rounded-lg p-2 text-sm"
+                value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+                >
                   <option>All Categories</option>
                   <option>GR</option>
                   <option>Notification</option>
@@ -222,7 +242,10 @@ const Documents = () => {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Date Added</label>
-                <select className="w-full border border-gray-200 rounded-lg p-2 text-sm">
+                <select className="w-full border border-gray-200 rounded-lg p-2 text-sm"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                >
                   <option>All Time</option>
                   <option>Last 7 days</option>
                   <option>Last 30 days</option>
@@ -232,7 +255,10 @@ const Documents = () => {
               </div>
               
               <div className="flex items-end">
-                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 w-full">
+                <button 
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 w-full"
+                onClick={() => fetchDocuments({ page: 1, limit: documentsPerPage })}// Reset to page 1 on filter
+                >
                   Apply Filters
                 </button>
               </div>
