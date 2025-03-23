@@ -5,7 +5,7 @@ import {
   Upload, Search, FileSearch, Folder
 } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
-
+import axios from 'axios';
 const Documents = () => {
   const [loading, setLoading] = useState(true);
   const [documents, setDocuments] = useState([]);
@@ -13,108 +13,18 @@ const Documents = () => {
   const [view, setView] = useState('grid');
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setDocuments([
-        {
-          id: 1,
-          title: 'General Register - Labor Laws 2018',
-          category: 'GR',
-          type: 'PDF',
-          date: 'Mar 12, 2018',
-          size: '4.2 MB',
-        },
-        {
-          id: 2,
-          title: 'Minimum Wage Notification for Textile Industry',
-          category: 'Notification',
-          type: 'PDF',
-          date: 'Jul 01, 2023',
-          size: '2.8 MB',
-        },
-        {
-          id: 3,
-          title: 'Safety Guidelines for Chemical Industries',
-          category: 'Guidelines',
-          type: 'DOCX',
-          date: 'Sep 15, 2022',
-          size: '5.1 MB',
-        },
-        {
-          id: 4,
-          title: 'Industrial Relations Act Amendment',
-          category: 'Amendment',
-          type: 'PDF',
-          date: 'Nov 30, 2021',
-          size: '3.5 MB',
-        },
-        {
-          id: 5,
-          title: 'Maternity Benefit Extension Proposal',
-          category: 'Proposal',
-          type: 'DOCX',
-          date: 'Aug 25, 2023',
-          size: '1.9 MB',
-        },
-        {
-          id: 6,
-          title: 'Special Economic Zone Labor Guidelines',
-          category: 'Guidelines',
-          type: 'PDF',
-          date: 'Jan 10, 2023',
-          size: '6.2 MB',
-        },
-        {
-          id: 7,
-          title: 'Contract Labor Regulation Act - 2022 Amendment',
-          category: 'Amendment',
-          type: 'PDF',
-          date: 'May 20, 2022',
-          size: '4.7 MB',
-        },
-        {
-          id: 8,
-          title: 'Factory Safety Standards - Chemical Sector',
-          category: 'Standards',
-          type: 'PDF',
-          date: 'Apr 05, 2023',
-          size: '3.3 MB',
-        },
-        {
-          id: 9,
-          title: 'Employee State Insurance Guidelines',
-          category: 'Guidelines',
-          type: 'DOCX',
-          date: 'Jun 18, 2022',
-          size: '2.5 MB',
-        },
-        {
-          id: 10,
-          title: 'Labor Law Compliance Checklist',
-          category: 'Checklist',
-          type: 'XLSX',
-          date: 'Jul 22, 2023',
-          size: '1.2 MB',
-        },
-        {
-          id: 11,
-          title: 'General Register - Wage Disputes 2022',
-          category: 'GR',
-          type: 'PDF',
-          date: 'Dec 15, 2022',
-          size: '5.8 MB',
-        },
-        {
-          id: 12,
-          title: 'Annual Labor Report - Gujarat 2022',
-          category: 'Report',
-          type: 'PDF',
-          date: 'Feb 28, 2023',
-          size: '7.4 MB',
-        },
-      ]);
-      setLoading(false);
-    }, 1500);
+    const fetchDocuments = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/documents'); // Replace with your API endpoint
+        setDocuments(response.data);
+        console.log("Documents State:", documents); // Add this line
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching documents:', error);
+        setLoading(false); // Ensure loading is false even on error
+      }
+    };
+    fetchDocuments();
   }, []);
 
   const getFileIcon = (type) => {
@@ -300,108 +210,108 @@ const Documents = () => {
             </div>
           )}
           
-          <div className="p-6">
-            {loading ? (
-              view === 'grid' ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-                    <div key={item} className="animate-pulse">
-                      <div className="h-48 bg-gray-200 rounded-xl w-full"></div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {[1, 2, 3, 4, 5, 6].map((item) => (
-                    <div key={item} className="animate-pulse flex items-center">
-                      <div className="w-10 h-10 bg-gray-200 rounded-lg mr-4"></div>
-                      <div className="flex-1">
-                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                      </div>
-                      <div className="w-20 h-8 bg-gray-200 rounded-lg"></div>
-                    </div>
-                  ))}
-                </div>
-              )
-            ) : documents.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <FileText className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1">No documents found</h3>
-                <p className="text-gray-500">Try adjusting your filters or search criteria</p>
+        <div className="p-6">
+             {loading ? (
+                view === 'grid' ? (
+               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {Array.from({ length: 8 }).map((_, index) => (
+                   <div key={`loading-${index}`} className="animate-pulse">
+                   <div className="h-48 bg-gray-200 rounded-xl w-full"></div>
+               </div>
+          ))}
+         </div>
+          ) : (
+        <div className="space-y-4">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={`loading-list-${index}`} className="animate-pulse flex items-center">
+              <div className="w-10 h-10 bg-gray-200 rounded-lg mr-4"></div>
+              <div className="flex-1">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
               </div>
-            ) : view === 'grid' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {documents.map((doc) => (
-                  <div 
-                    key={doc.id} 
-                    className="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-elegant transition-all cursor-pointer p-5"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      {getFileIcon(doc.type)}
-                      <span className="text-xs font-medium px-2 py-1 bg-gray-100 rounded-full text-gray-600">
-                        {doc.type}
-                      </span>
-                    </div>
-                    <h3 className="text-base font-semibold text-gray-900 mb-1 line-clamp-2">
-                      {doc.title}
-                    </h3>
-                    <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-                      <span>{doc.category}</span>
-                      <span>{doc.date}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">{doc.size}</span>
-                      <div className="flex gap-1">
-                        <button className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-50">
-                          <Eye size={16} />
-                        </button>
-                        <button className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-50">
-                          <Download size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="w-20 h-8 bg-gray-200 rounded-lg"></div>
+            </div>
+          ))}
+        </div>
+      )
+    ) : documents.length === 0 ? (
+      <div key="noDocuments" className="text-center py-12">
+        <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+          <FileText className="w-8 h-8 text-gray-400" />
+        </div>
+        <h3 className="text-lg font-medium text-gray-900 mb-1">No documents found</h3>
+        <p className="text-gray-500">Try adjusting your filters or search criteria</p>
+      </div>
+    ) : view === 'grid' ? (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {documents.map((doc) => (
+          <div
+            key={doc.id}
+            className="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-elegant transition-all cursor-pointer p-5"
+          >
+            <div className="flex items-center justify-between mb-4">
+              {getFileIcon(doc.type)}
+              <span className="text-xs font-medium px-2 py-1 bg-gray-100 rounded-full text-gray-600">
+                {doc.type}
+              </span>
+            </div>
+            <h3 className="text-base font-semibold text-gray-900 mb-1 line-clamp-2">
+              {doc.title}
+            </h3>
+            <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+              <span>{doc.category}</span>
+              <span>{doc.date}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-500">{doc.size}</span>
+              <div className="flex gap-1">
+                <button className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-50">
+                  <Eye size={16} />
+                </button>
+                <button className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-50">
+                  <Download size={16} />
+                </button>
               </div>
-            ) : (
-              <div className="divide-y divide-gray-100">
-                {documents.map((doc) => (
-                  <div 
-                    key={doc.id} 
-                    className="flex items-center py-4 hover:bg-gray-50 px-4 rounded-lg cursor-pointer"
-                  >
-                    <div className="mr-4">
-                      {getFileIcon(doc.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-medium text-gray-900 truncate">
-                        {doc.title}
-                      </h3>
-                      <div className="flex items-center text-xs text-gray-500 mt-1">
-                        <span className="inline-block px-2 py-0.5 bg-gray-100 rounded-full mr-2">
-                          {doc.category}
-                        </span>
-                        <span>{doc.date}</span>
-                        <span className="mx-2">•</span>
-                        <span>{doc.size}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
-                        <Eye size={18} />
-                      </button>
-                      <button className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
-                        <Download size={18} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            </div>
           </div>
+        ))}
+      </div>
+    ) : (
+      <div className="divide-y divide-gray-100">
+        {documents.map((doc) => (
+          <div
+            key={doc.id}
+            className="flex items-center py-4 hover:bg-gray-50 px-4 rounded-lg cursor-pointer"
+          >
+            <div className="mr-4">
+              {getFileIcon(doc.type)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-medium text-gray-900 truncate">
+                {doc.title}
+              </h3>
+              <div className="flex items-center text-xs text-gray-500 mt-1">
+                <span className="inline-block px-2 py-0.5 bg-gray-100 rounded-full mr-2">
+                  {doc.category}
+                </span>
+                <span>{doc.date}</span>
+                <span className="mx-2">•</span>
+                <span>{doc.size}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
+                <Eye size={18} />
+              </button>
+              <button className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
+                <Download size={18} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
           
           <div className="px-6 py-4 border-t border-gray-100 flex justify-between items-center">
             <p className="text-sm text-gray-500">Showing 1-12 of 886 documents</p>
