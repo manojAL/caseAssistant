@@ -11,6 +11,8 @@ const Documents = () => {
   const [documents, setDocuments] = useState([]);
   const [filterOpen, setFilterOpen] = useState(false);
   const [view, setView] = useState('grid');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [documentsPerPage] = useState(12);
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -26,6 +28,33 @@ const Documents = () => {
     };
     fetchDocuments();
   }, []);
+  // Get current documents
+  const indexOfLastDocument = currentPage * documentsPerPage;
+  const indexOfFirstDocument = indexOfLastDocument - documentsPerPage;
+  const currentDocuments = documents.slice(indexOfFirstDocument, indexOfLastDocument);
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Calculate total pages
+  const totalPages = Math.ceil(documents.length / documentsPerPage);
+  
+  const pageNumbers = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pageNumbers.push(i);
+  }
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   const getFileIcon = (type) => {
     switch (type.toLowerCase()) {
@@ -244,7 +273,7 @@ const Documents = () => {
       </div>
     ) : view === 'grid' ? (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {documents.map((doc) => (
+        {currentDocuments.map((doc) => (
           <div
             key={doc.id}
             className="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-elegant transition-all cursor-pointer p-5"
@@ -278,7 +307,7 @@ const Documents = () => {
       </div>
     ) : (
       <div className="divide-y divide-gray-100">
-        {documents.map((doc) => (
+        {currentDocuments.map((doc) => (
           <div
             key={doc.id}
             className="flex items-center py-4 hover:bg-gray-50 px-4 rounded-lg cursor-pointer"
@@ -314,21 +343,26 @@ const Documents = () => {
   </div>
           
           <div className="px-6 py-4 border-t border-gray-100 flex justify-between items-center">
-            <p className="text-sm text-gray-500">Showing 1-12 of 886 documents</p>
+            <p className="text-sm text-gray-500">Showing {indexOfFirstDocument + 1}-{Math.min(indexOfLastDocument, documents.length)} of {documents.length} documents</p>
             <div className="flex gap-1">
-              <button className="px-3 py-1 border border-gray-200 rounded-md text-sm text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+              <button className="px-3 py-1 border border-gray-200 rounded-md text-sm text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" 
+              disabled={currentPage === 1}
+              onClick={handlePrevPage}>
                 Previous
               </button>
-              <button className="px-3 py-1 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-600 font-medium">
-                1
-              </button>
-              <button className="px-3 py-1 border border-gray-200 rounded-md text-sm text-gray-500 hover:bg-gray-50">
-                2
-              </button>
-              <button className="px-3 py-1 border border-gray-200 rounded-md text-sm text-gray-500 hover:bg-gray-50">
-                3
-              </button>
-              <button className="px-3 py-1 border border-gray-200 rounded-md text-sm text-gray-500 hover:bg-gray-50">
+              {pageNumbers.map((number) => (
+            <button
+              key={number}
+              className={`px-3 py-1 border border-gray-200 rounded-md text-sm ${currentPage === number ? 'bg-blue-50 border-blue-200 text-blue-600 font-medium' : 'text-gray-500 hover:bg-gray-50'}`}
+              onClick={() => paginate(number)}
+            >
+              {number}
+            </button>
+          ))}
+              <button className="px-3 py-1 border border-gray-200 rounded-md text-sm text-gray-500 hover:bg-gray-50"
+              disabled={currentPage === totalPages}
+              onClick={handleNextPage}
+              >
                 Next
               </button>
             </div>
