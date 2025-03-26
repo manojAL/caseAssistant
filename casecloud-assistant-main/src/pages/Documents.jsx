@@ -5,6 +5,9 @@ import {
   Upload, Search, FileSearch, Folder
 } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
+import UploadModal from '../components/UploadModal';
+import DownloadButton from '../components/DownloadButton';
+import EyeButton from '../components/EyeButton';
 import axios from 'axios';
 const Documents = () => {
   const [loading, setLoading] = useState(true);
@@ -16,6 +19,7 @@ const Documents = () => {
   const [selectedType, setSelectedType] = useState('All Types');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [selectedDate, setSelectedDate] = useState('All Time');
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   useEffect(() => {
    // Fetch all documents on initial render
@@ -23,13 +27,14 @@ const Documents = () => {
    }, []);
     const fetchDocuments = async () => {
       try {
+        setLoading(true);
         const response = await axios.get('http://localhost:5000/api/documents',{
           params: {
             type: selectedType,
             category: selectedCategory,
             date: selectedDate,
             page: currentPage,
-            limit: documentsPerPage,
+            limit: 12,
           },
         }); // Replace with your API endpoint
         setDocuments(response.data);
@@ -68,6 +73,22 @@ const Documents = () => {
       setCurrentPage(currentPage + 1);
     }
   };
+  const handleUpload = async (formData) => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/documents/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      // Refresh the documents list
+      fetchDocuments();
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to upload document');
+    }
+  };
+  
 
   const getFileIcon = (type) => {
     switch (type.toLowerCase()) {
@@ -111,10 +132,18 @@ const Documents = () => {
               <FileSearch className="w-4 h-4 mr-2" />
               <span>Advanced Search</span>
             </button>
-            <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700">
+            <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700" onClick={() => setIsUploadModalOpen(true)}>
               <Upload className="w-4 h-4 mr-2" />
               <span>Upload</span>
             </button>
+            {isUploadModalOpen && (
+            <UploadModal 
+            isOpen={isUploadModalOpen}
+            onClose={() => setIsUploadModalOpen(false)}
+            onUpload={handleUpload}
+            />
+           )}
+
           </div>
         </div>
 
@@ -320,12 +349,8 @@ const Documents = () => {
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-500">{doc.size}</span>
               <div className="flex gap-1">
-                <button className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-50">
-                  <Eye size={16} />
-                </button>
-                <button className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-50">
-                  <Download size={16} />
-                </button>
+              <EyeButton document={doc} />
+              <DownloadButton document={doc} />
               </div>
             </div>
           </div>
@@ -355,12 +380,8 @@ const Documents = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
-                <Eye size={18} />
-              </button>
-              <button className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
-                <Download size={18} />
-              </button>
+            <EyeButton document={doc} iconSize={18} className="p-2" />
+            <DownloadButton document={doc} iconSize={18} className="p-2" />
             </div>
           </div>
         ))}
