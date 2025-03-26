@@ -1,106 +1,98 @@
-
 import React, { useState, useEffect } from 'react';
-import { 
+import { Briefcase,
   MoreVertical, ChevronDown, Filter, Calendar, Clock, 
   SortAsc, ArrowDownUp, Download, Printer, Plus
 } from 'lucide-react';
 import CaseCard from '../components/CaseCard';
 import SearchBar from '../components/SearchBar';
+import NewCaseModal from '../components/NewCaseModal';
+import axios from 'axios';
 
 const Cases = () => {
   const [loading, setLoading] = useState(true);
   const [cases, setCases] = useState([]);
   const [filterOpen, setFilterOpen] = useState(false);
   const [view, setView] = useState('grid');
+  const [isNewCaseModalOpen, setIsNewCaseModalOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    status: 'All Statuses',
+    priority: 'All Priorities',
+    category: 'All Categories',
+    startDate: '',
+    endDate: '',
+    sortBy: 'dateFiled',
+    sortOrder: 'desc'
+  });
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCases: 0
+  });
+
+  const fetchCases = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('http://localhost:5000/api/cases', {
+        params: {
+          ...filters,
+          page: pagination.currentPage,
+          limit: 10
+        }
+      });
+      setCases(response.data.cases);
+      setPagination({
+        currentPage: response.data.currentPage,
+        totalPages: response.data.totalPages,
+        totalCases: response.data.totalCases
+      });
+    } catch (error) {
+      console.error('Error fetching cases:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setCases([
-        {
-          id: 1,
-          caseNumber: 'LC-2023-001',
-          title: 'Gujarat Textile Workers Union vs. State Labor Department',
-          status: 'Open',
-          date: 'Aug 10, 2023',
-          dueDate: 'Oct 15, 2023',
-          priority: 'High',
-          category: 'Labor Dispute'
-        },
-        {
-          id: 2,
-          caseNumber: 'LC-2023-002',
-          title: 'Minimum Wage Implementation in Private Manufacturing Sector',
-          status: 'Pending',
-          date: 'Aug 15, 2023',
-          dueDate: 'Sep 30, 2023',
-          priority: 'Medium',
-          category: 'Wage Dispute'
-        },
-        {
-          id: 3,
-          caseNumber: 'LC-2023-003',
-          title: 'Workplace Safety Standards in Chemical Industries',
-          status: 'Urgent',
-          date: 'Aug 22, 2023',
-          dueDate: 'Sep 5, 2023',
-          priority: 'High',
-          category: 'Safety Standards'
-        },
-        {
-          id: 4,
-          caseNumber: 'LC-2023-004',
-          title: 'Maternity Benefit Extension for Contract Workers',
-          status: 'Open',
-          date: 'Aug 28, 2023',
-          dueDate: 'Oct 20, 2023',
-          priority: 'Medium',
-          category: 'Benefits'
-        },
-        {
-          id: 5,
-          caseNumber: 'LC-2023-005',
-          title: 'Industrial Dispute Resolution - Ahmedabad Manufacturing Plant',
-          status: 'Closed',
-          date: 'Jul 5, 2023',
-          dueDate: null,
-          priority: 'Low',
-          category: 'Industrial Dispute'
-        },
-        {
-          id: 6,
-          caseNumber: 'LC-2023-006',
-          title: 'Overtime Pay Calculation Guidelines for IT Sector',
-          status: 'Open',
-          date: 'Aug 30, 2023',
-          dueDate: 'Nov 10, 2023',
-          priority: 'Medium',
-          category: 'Wage Dispute'
-        },
-        {
-          id: 7,
-          caseNumber: 'LC-2023-007',
-          title: 'Employee Compensation for Work-Related Injuries',
-          status: 'Pending',
-          date: 'Sep 2, 2023',
-          dueDate: 'Oct 30, 2023',
-          priority: 'High',
-          category: 'Compensation'
-        },
-        {
-          id: 8,
-          caseNumber: 'LC-2023-008',
-          title: 'Remote Work Policy Implementation for Government Departments',
-          status: 'Open',
-          date: 'Sep 5, 2023',
-          dueDate: 'Nov 20, 2023',
-          priority: 'Medium',
-          category: 'Work Policy'
-        },
-      ]);
-      setLoading(false);
-    }, 1500);
-  }, []);
+    fetchCases();
+  }, [filters, pagination.currentPage]);
+
+  const handleCreateCase = async (newCaseData) => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/cases', {
+        title: newCaseData.title,
+        description: newCaseData.description,
+        status: newCaseData.status,
+        priority: newCaseData.priority,
+        category: newCaseData.category,
+        dueDate: newCaseData.dueDate
+      });
+      
+      // Refresh the cases list
+      await fetchCases();
+      setIsNewCaseModalOpen(false);
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error creating case:', error);
+      throw new Error(error.response?.data?.message || 'Failed to create case');
+    }
+  };
+
+  const handleFilterChange = (filterName, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterName]: value
+    }));
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+  };
+
+  const handleSearch = (searchTerm) => {
+    handleFilterChange('search', searchTerm);
+  };
+
+  const handlePageChange = (page) => {
+    setPagination(prev => ({ ...prev, currentPage: page }));
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
@@ -111,7 +103,10 @@ const Cases = () => {
             <p className="text-gray-500">View, filter, and manage all legal cases</p>
           </div>
           <div className="mt-4 md:mt-0">
-            <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700">
+            <button 
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700"
+              onClick={() => setIsNewCaseModalOpen(true)}
+            >
               <Plus className="w-4 h-4 mr-2" />
               <span>New Case</span>
             </button>
@@ -119,7 +114,11 @@ const Cases = () => {
         </div>
 
         <div className="mb-6">
-          <SearchBar placeholder="Search by case number, title, or category..." fullWidth />
+          <SearchBar 
+            placeholder="Search by case number, title, or category..." 
+            fullWidth 
+            onSearch={handleSearch}
+          />
         </div>
 
         <div className="bg-white rounded-xl shadow-elegant mb-6">
@@ -139,19 +138,16 @@ const Cases = () => {
                 <span>Date Range</span>
               </button>
               
-              <button className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50">
-                <SortAsc className="w-4 h-4" />
-                <span>Sort</span>
-                <ChevronDown className="w-4 h-4" />
-              </button>
+              <div className="relative">
+                <button className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50">
+                  <SortAsc className="w-4 h-4" />
+                  <span>Sort: {filters.sortBy === 'dateFiled' ? 'Date Filed' : 'Due Date'}</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+              </div>
             </div>
             
             <div className="flex gap-2">
-              <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900">
-                <Download className="w-4 h-4" />
-                <span className="hidden sm:inline">Export</span>
-              </button>
-              
               <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900">
                 <Printer className="w-4 h-4" />
                 <span className="hidden sm:inline">Print</span>
@@ -162,22 +158,13 @@ const Cases = () => {
                   onClick={() => setView('grid')}
                   className={`px-3 py-2 ${view === 'grid' ? 'bg-gray-100' : 'bg-white'}`}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="3" y="3" width="7" height="7" rx="1" fill={view === 'grid' ? "#4B5563" : "#9CA3AF"} />
-                    <rect x="14" y="3" width="7" height="7" rx="1" fill={view === 'grid' ? "#4B5563" : "#9CA3AF"} />
-                    <rect x="3" y="14" width="7" height="7" rx="1" fill={view === 'grid' ? "#4B5563" : "#9CA3AF"} />
-                    <rect x="14" y="14" width="7" height="7" rx="1" fill={view === 'grid' ? "#4B5563" : "#9CA3AF"} />
-                  </svg>
+                  {/* Grid icon */}
                 </button>
                 <button 
                   onClick={() => setView('list')}
                   className={`px-3 py-2 ${view === 'list' ? 'bg-gray-100' : 'bg-white'}`}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="3" y="4" width="18" height="2" rx="1" fill={view === 'list' ? "#4B5563" : "#9CA3AF"} />
-                    <rect x="3" y="11" width="18" height="2" rx="1" fill={view === 'list' ? "#4B5563" : "#9CA3AF"} />
-                    <rect x="3" y="18" width="18" height="2" rx="1" fill={view === 'list' ? "#4B5563" : "#9CA3AF"} />
-                  </svg>
+                  {/* List icon */}
                 </button>
               </div>
             </div>
@@ -187,7 +174,11 @@ const Cases = () => {
             <div className="p-4 border-b border-gray-100 grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select className="w-full border border-gray-200 rounded-lg p-2 text-sm">
+                <select 
+                  className="w-full border border-gray-200 rounded-lg p-2 text-sm"
+                  value={filters.status}
+                  onChange={(e) => handleFilterChange('status', e.target.value)}
+                >
                   <option>All Statuses</option>
                   <option>Open</option>
                   <option>Pending</option>
@@ -198,7 +189,11 @@ const Cases = () => {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-                <select className="w-full border border-gray-200 rounded-lg p-2 text-sm">
+                <select 
+                  className="w-full border border-gray-200 rounded-lg p-2 text-sm"
+                  value={filters.priority}
+                  onChange={(e) => handleFilterChange('priority', e.target.value)}
+                >
                   <option>All Priorities</option>
                   <option>High</option>
                   <option>Medium</option>
@@ -208,7 +203,11 @@ const Cases = () => {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                <select className="w-full border border-gray-200 rounded-lg p-2 text-sm">
+                <select 
+                  className="w-full border border-gray-200 rounded-lg p-2 text-sm"
+                  value={filters.category}
+                  onChange={(e) => handleFilterChange('category', e.target.value)}
+                >
                   <option>All Categories</option>
                   <option>Labor Dispute</option>
                   <option>Wage Dispute</option>
@@ -219,7 +218,10 @@ const Cases = () => {
               </div>
               
               <div className="flex items-end">
-                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 w-full">
+                <button 
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 w-full"
+                  onClick={() => setFilterOpen(false)}
+                >
                   Apply Filters
                 </button>
               </div>
@@ -240,22 +242,48 @@ const Cases = () => {
                 <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
                   <Briefcase className="w-8 h-8 text-gray-400" />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1">No cases found</h3>
-                <p className="text-gray-500">Try adjusting your filters or search criteria</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-1">{loading ? 'Loading cases...' : 'No cases found'}</h3>
+                <p className="text-gray-500">
+      {loading ? (
+        'Please wait while we load cases'
+      ) : (
+        <>
+          No cases match your current filters.
+          <button 
+            className="ml-1 text-blue-600 hover:text-blue-800"
+            onClick={() => {
+              // Reset all filters
+              setFilters({
+                status: 'All Statuses',
+                priority: 'All Priorities',
+                category: 'All Categories',
+                startDate: '',
+                endDate: '',
+                sortBy: 'dateFiled',
+                sortOrder: 'desc'
+              });
+              setPagination(prev => ({ ...prev, currentPage: 1 }));
+            }}
+          >
+            Clear filters
+          </button>
+        </>
+      )}
+    </p>
               </div>
             ) : (
               <div className={`grid grid-cols-1 ${view === 'grid' ? 'md:grid-cols-2 lg:grid-cols-3' : ''} gap-6`}>
                 {cases.map((caseItem) => (
                   <CaseCard 
-                    key={caseItem.id}
+                    key={caseItem._id}
                     caseNumber={caseItem.caseNumber}
                     title={caseItem.title}
                     status={caseItem.status}
-                    date={caseItem.date}
-                    dueDate={caseItem.dueDate}
+                    date={new Date(caseItem.dateFiled).toLocaleDateString()}
+                    dueDate={caseItem.dueDate ? new Date(caseItem.dueDate).toLocaleDateString() : null}
                     priority={caseItem.priority}
                     category={caseItem.category}
-                    onClick={() => console.log('Case clicked:', caseItem.id)}
+                    onClick={() => console.log('Case clicked:', caseItem._id)}
                   />
                 ))}
               </div>
@@ -263,27 +291,50 @@ const Cases = () => {
           </div>
           
           <div className="px-6 py-4 border-t border-gray-100 flex justify-between items-center">
-            <p className="text-sm text-gray-500">Showing 1-8 of 128 cases</p>
+            <p className="text-sm text-gray-500">
+              Showing {(pagination.currentPage - 1) * 10 + 1}-{Math.min(pagination.currentPage * 10, pagination.totalCases)} of {pagination.totalCases} cases
+            </p>
             <div className="flex gap-1">
-              <button className="px-3 py-1 border border-gray-200 rounded-md text-sm text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+              <button 
+                className="px-3 py-1 border border-gray-200 rounded-md text-sm text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" 
+                disabled={pagination.currentPage === 1}
+                onClick={() => handlePageChange(pagination.currentPage - 1)}
+              >
                 Previous
               </button>
-              <button className="px-3 py-1 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-600 font-medium">
-                1
-              </button>
-              <button className="px-3 py-1 border border-gray-200 rounded-md text-sm text-gray-500 hover:bg-gray-50">
-                2
-              </button>
-              <button className="px-3 py-1 border border-gray-200 rounded-md text-sm text-gray-500 hover:bg-gray-50">
-                3
-              </button>
-              <button className="px-3 py-1 border border-gray-200 rounded-md text-sm text-gray-500 hover:bg-gray-50">
+              {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                const pageNum = i + 1;
+                return (
+                  <button
+                    key={pageNum}
+                    className={`px-3 py-1 border rounded-md text-sm ${
+                      pagination.currentPage === pageNum 
+                        ? 'bg-blue-50 border-blue-200 text-blue-600 font-medium' 
+                        : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                    }`}
+                    onClick={() => handlePageChange(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              <button 
+                className="px-3 py-1 border border-gray-200 rounded-md text-sm text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={pagination.currentPage === pagination.totalPages}
+                onClick={() => handlePageChange(pagination.currentPage + 1)}
+              >
                 Next
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      <NewCaseModal 
+        isOpen={isNewCaseModalOpen}
+        onClose={() => setIsNewCaseModalOpen(false)}
+        onCreate={handleCreateCase}
+      />
     </div>
   );
 };

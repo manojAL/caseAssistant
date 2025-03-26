@@ -1,88 +1,65 @@
-
 import React from 'react';
-import { Clock, Calendar, MoreVertical, AlertCircle, CheckCircle } from 'lucide-react';
+import { Clock, AlertTriangle, Check, HelpCircle } from 'lucide-react';
+
+const statusIcons = {
+  Open: <HelpCircle className="w-4 h-4 text-blue-500" />,
+  Pending: <Clock className="w-4 h-4 text-yellow-500" />,
+  Closed: <Check className="w-4 h-4 text-green-500" />,
+  Urgent: <AlertTriangle className="w-4 h-4 text-red-500" />
+};
+
+const priorityColors = {
+  High: 'bg-red-100 text-red-800',
+  Medium: 'bg-yellow-100 text-yellow-800',
+  Low: 'bg-green-100 text-green-800'
+};
 
 const CaseCard = ({ 
-  caseNumber,
-  title,
-  status,
-  date,
-  dueDate,
-  priority,
+  caseNumber, 
+  title, 
+  status, 
+  date, 
+  dueDate, 
+  priority, 
   category,
-  onClick
+  onClick 
 }) => {
-  const getStatusColor = () => {
-    switch (status.toLowerCase()) {
-      case 'open':
-        return 'bg-blue-50 text-blue-600';
-      case 'closed':
-        return 'bg-gray-50 text-gray-600';
-      case 'pending':
-        return 'bg-yellow-50 text-yellow-600';
-      case 'urgent':
-        return 'bg-red-50 text-red-600';
-      default:
-        return 'bg-gray-50 text-gray-600';
-    }
-  };
-
-  const getPriorityIcon = () => {
-    switch (priority.toLowerCase()) {
-      case 'high':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
-      case 'medium':
-        return <AlertCircle className="w-4 h-4 text-yellow-500" />;
-      case 'low':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      default:
-        return null;
-    }
-  };
-
   return (
     <div 
-      className="bg-white rounded-xl shadow-elegant hover:shadow-elegant-lg transition-all cursor-pointer p-5"
+      className="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-elegant transition-all cursor-pointer p-5"
       onClick={onClick}
     >
-      <div className="flex justify-between items-start mb-3">
+      <div className="flex items-start justify-between mb-3">
         <div>
-          <span className="text-xs font-medium text-gray-500">Case #{caseNumber}</span>
-          <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{title}</h3>
-        </div>
-        <div className="flex flex-col items-end">
-          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor()}`}>
-            {status}
+          <span className="text-xs font-medium px-2 py-1 bg-gray-100 rounded-full text-gray-600">
+            {caseNumber}
           </span>
-          <button className="mt-1 text-gray-400 hover:text-gray-600">
-            <MoreVertical className="w-4 h-4" />
-          </button>
+        </div>
+        <div className="flex items-center gap-1">
+          {statusIcons[status]}
+          <span className="text-xs font-medium">{status}</span>
         </div>
       </div>
-
-      <div className="flex flex-wrap gap-2 mb-3">
-        <span className="px-2.5 py-1 bg-gray-50 rounded-md text-xs font-medium text-gray-600">
-          {category}
-        </span>
-      </div>
-
-      <div className="flex items-center justify-between text-sm text-gray-500">
-        <div className="flex items-center">
-          <Calendar className="w-4 h-4 mr-1" />
-          <span>{date}</span>
-        </div>
-        
-        <div className="flex items-center">
-          {getPriorityIcon()}
-          <span className="ml-1">{priority}</span>
-        </div>
-
+      
+      <h3 className="text-base font-semibold text-gray-900 mb-3 line-clamp-2">
+        {title}
+      </h3>
+      
+      <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+        <span>Filed: {date}</span>
         {dueDate && (
-          <div className="flex items-center">
-            <Clock className="w-4 h-4 mr-1" />
-            <span>Due: {dueDate}</span>
-          </div>
+          <span className="flex items-center">
+            <Clock className="w-3 h-3 mr-1" />
+            Due: {dueDate}
+          </span>
         )}
+      </div>
+      
+      <div className="flex items-center justify-between">
+        <span className={`text-xs font-medium px-2 py-1 rounded-full ${priorityColors[priority]}`}>
+          {priority} Priority
+        </span>
+        <span className="text-xs text-gray-500">{category}</span>
       </div>
     </div>
   );
