@@ -32,7 +32,7 @@ const StatCard = ({ icon: Icon, title, value, trend, trendValue, loading }) => {
     <div className="bg-white shadow-elegant rounded-xl p-6 transition-all hover:shadow-elegant-lg">
       <div className="flex items-center">
         <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 mr-4">
-          <Icon className="w-6 h-6" />
+        {Icon && <Icon className="w-6 h-6" />}
         </div>
         <div>
           <p className="text-sm font-medium text-gray-500">{title}</p>

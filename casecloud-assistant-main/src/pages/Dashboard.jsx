@@ -1,93 +1,110 @@
 
 import React, { useState, useEffect } from 'react';
 import { BarChart3, FileText, Briefcase, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
+import * as icons from 'lucide-react';
+
 import StatCard from '../components/StatCard';
 import CaseCard from '../components/CaseCard';
 import SearchBar from '../components/SearchBar';
-
+import api from '../config/api'; // Import the configured axios instance
+import axios from 'axios';
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [recentCases, setRecentCases] = useState([]);
-
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setRecentCases([
-        {
-          id: 1,
-          caseNumber: 'LC-2023-001',
-          title: 'Gujarat Textile Workers Union vs. State Labor Department',
-          status: 'Open',
-          date: 'Aug 10, 2023',
-          dueDate: 'Oct 15, 2023',
-          priority: 'High',
-          category: 'Labor Dispute'
+  const [stats, setStats] = useState([]);
+  const [caseDistribution, setCaseDistribution] = useState({
+    total: 0,
+    activeCases: 0,
+    closedCases: 0,
+    pendingReview: 0
+  });
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch all data in parallel
+      const [statsRes, recentCasesRes, distributionRes] = await Promise.all([
+        api.get('/dashboard/stats'),
+        api.get('/dashboard/recent-cases'),
+        api.get('/dashboard/case-distribution')
+      ]);
+      const statsWithIcons = statsRes.data.stats?.map(stat => ({
+        ...stat,
+        icon: icons[stat.icon] || icons.AlertTriangle // Fallback icon
+      })) || [];
+      setStats(statsWithIcons);
+      setRecentCases(recentCasesRes.data.cases || []);
+      setCaseDistribution(distributionRes.data || {
+        total: 0,
+        activeCases: 0,
+        closedCases: 0,
+        pendingReview: 0
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      // Fallback to mock data if API fails
+      setStats([
+        { 
+          title: 'Active Cases', 
+          value: activeCases.toString(), 
+          trend: 'up', 
+          trendValue: '+12%', 
+          icon: icons.Briefcase 
         },
-        {
-          id: 2,
-          caseNumber: 'LC-2023-002',
-          title: 'Minimum Wage Implementation in Private Manufacturing Sector',
-          status: 'Pending',
-          date: 'Aug 15, 2023',
-          dueDate: 'Sep 30, 2023',
-          priority: 'Medium',
-          category: 'Wage Dispute'
+        { 
+          title: 'Total Documents', 
+          value: totalDocuments.toString(), 
+          trend: 'up', 
+          trendValue: '+8%', 
+          icon: icons.FileText
         },
-        {
-          id: 3,
-          caseNumber: 'LC-2023-003',
-          title: 'Workplace Safety Standards in Chemical Industries',
-          status: 'Urgent',
-          date: 'Aug 22, 2023',
-          dueDate: 'Sep 5, 2023',
-          priority: 'High',
-          category: 'Safety Standards'
+        { 
+          title: 'Pending Actions', 
+          value: pendingActions.toString(), 
+          trend: 'down', 
+          trendValue: '-6%', 
+          icon: icons.Clock 
         },
-        {
-          id: 4,
-          caseNumber: 'LC-2023-004',
-          title: 'Maternity Benefit Extension for Contract Workers',
-          status: 'Open',
-          date: 'Aug 28, 2023',
-          dueDate: 'Oct 20, 2023',
-          priority: 'Medium',
-          category: 'Benefits'
+        { 
+          title: 'High Priority', 
+          value: highPriority.toString(), 
+          trend: 'up', 
+          trendValue: '+0%', 
+          icon: icons.AlertTriangle
         },
       ]);
+      
+      setRecentCases([]);
+      
+      setCaseDistribution({
+        total: 0,
+        activeCases: 0,
+        closedCases: 0,
+        pendingReview:0
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
   }, []);
 
-  const stats = [
-    { 
-      title: 'Active Cases', 
-      value: '128', 
-      trend: 'up', 
-      trendValue: '+12%', 
-      icon: Briefcase 
-    },
-    { 
-      title: 'Total Documents', 
-      value: '1,482', 
-      trend: 'up', 
-      trendValue: '+8%', 
-      icon: FileText 
-    },
-    { 
-      title: 'Pending Actions', 
-      value: '24', 
-      trend: 'down', 
-      trendValue: '-6%', 
-      icon: Clock 
-    },
-    { 
-      title: 'High Priority', 
-      value: '17', 
-      trend: 'up', 
-      trendValue: '+4%', 
-      icon: AlertTriangle 
-    },
-  ];
+  // Calculate stroke dash offsets for the pie chart
+  const calculateDashOffsets = () => {
+    const totalCircumference = 251.2; // 2 * π * r (where r=40)
+    const activeOffset = totalCircumference - (totalCircumference * caseDistribution.activeCases / caseDistribution.total);
+    const closedOffset = activeOffset - (totalCircumference * caseDistribution.closedCases / caseDistribution.total);
+    
+    return {
+      activeOffset,
+      closedOffset
+    };
+  };
+
+  const { activeOffset, closedOffset } = calculateDashOffsets();
+
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
@@ -195,7 +212,7 @@ const Dashboard = () => {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-sm">
                     <div className="text-center">
-                      <div className="text-xl font-bold text-gray-900">128</div>
+                      <div className="text-xl font-bold text-gray-900">{caseDistribution.total}</div>
                       <div className="text-xs text-gray-500">Total</div>
                     </div>
                   </div>
@@ -239,21 +256,21 @@ const Dashboard = () => {
                     <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
                     <span className="text-sm text-gray-700">Active Cases</span>
                   </div>
-                  <span className="text-sm font-medium">80 (62%)</span>
+                  <span className="text-sm font-medium"> {caseDistribution.activeCases} ({Math.round((caseDistribution.activeCases / caseDistribution.total) * 100)}%)</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
                     <span className="text-sm text-gray-700">Closed Cases</span>
                   </div>
-                  <span className="text-sm font-medium">25 (20%)</span>
+                  <span className="text-sm font-medium"> {caseDistribution.closedCases} ({Math.round((caseDistribution.closedCases / caseDistribution.total) * 100)}%)</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
                     <span className="text-sm text-gray-700">Pending Review</span>
                   </div>
-                  <span className="text-sm font-medium">23 (18%)</span>
+                  <span className="text-sm font-medium">{caseDistribution.pendingReview} ({Math.round((caseDistribution.pendingReview / caseDistribution.total) * 100)}%)</span>
                 </div>
               </div>
             </div>
