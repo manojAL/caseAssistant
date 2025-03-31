@@ -1,12 +1,32 @@
 
 import React, { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink,useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, MessageSquare, Briefcase, 
   FileText, Settings, LogOut, ChevronRight
 } from 'lucide-react';
+import axios from 'axios';
 
 const Sidebar = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        await axios.post('http://localhost:5000/api/auth/logout', {}, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+      }
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
   const [mounted, setMounted] = useState(false);
   
   useEffect(() => {
@@ -50,7 +70,8 @@ const Sidebar = () => {
         </nav>
 
         <div className="p-4 border-t border-gray-100">
-          <button className="flex w-full items-center px-3 py-3 text-sm font-medium text-gray-700 rounded-lg hover:text-red-600 hover:bg-red-50">
+          <button 
+           onClick={handleLogout} className="flex w-full items-center px-3 py-3 text-sm font-medium text-gray-700 rounded-lg hover:text-red-600 hover:bg-red-50">
             <LogOut className="mr-3 h-5 w-5 flex-shrink-0" />
             <span className="truncate">Logout</span>
           </button>

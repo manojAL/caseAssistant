@@ -2,11 +2,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, User, Lock } from 'lucide-react';
-
+import axios from 'axios';
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -16,17 +17,24 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/login', credentials);
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      // Redirect to dashboard
       navigate('/dashboard');
-    }, 1500);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
-
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 gradient-background">
       <div className="w-full max-w-md px-8 py-10 bg-white/90 backdrop-blur-lg rounded-2xl shadow-elegant-lg animate-fade-in">
@@ -37,6 +45,11 @@ const Login = () => {
           <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
           <p className="text-gray-500 mt-1">Sign in to your account</p>
         </div>
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>

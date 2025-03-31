@@ -2,16 +2,19 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, User, Mail, Lock, UserPlus } from 'lucide-react';
+import axios from 'axios';
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
+    fullName: '',
     email: '',
     username: '',
     password: ''
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -21,15 +24,20 @@ const Signup = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await axios.post('http://localhost:5000/api/auth/signup', formData);
+      // Redirect to login after successful signup
+      navigate('/login');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Signup failed. Please try again.');
+    } finally {
       setLoading(false);
-      navigate('/dashboard');
-    }, 1500);
+    }
   };
 
   return (
@@ -42,7 +50,11 @@ const Signup = () => {
           <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
           <p className="text-gray-500 mt-1">Join the Legal Case Management System</p>
         </div>
-        
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -55,13 +67,13 @@ const Signup = () => {
                 </div>
                 <input
                   id="name"
-                  name="name"
+                  name="fullName"
                   type="text"
                   autoComplete="name"
                   required
                   className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                   placeholder="John Doe"
-                  value={formData.name}
+                  value={formData.fullName}
                   onChange={handleChange}
                 />
               </div>

@@ -6,8 +6,8 @@ import * as icons from 'lucide-react';
 import StatCard from '../components/StatCard';
 import CaseCard from '../components/CaseCard';
 import SearchBar from '../components/SearchBar';
-import api from '../config/api'; // Import the configured axios instance
-import axios from 'axios';
+import api from '../config/axios'; // Import the configured axios instance
+
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [recentCases, setRecentCases] = useState([]);

@@ -14,7 +14,7 @@ import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
-
+import HomePage from './pages/HomePage'
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -25,6 +25,7 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
+            <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route 
